@@ -20,9 +20,11 @@ namespace TicTacToe
 
         public List<Table> Tables { get; set; }
         public List<TableState> States { get; set; }
+        public Dictionary<Table, Table> OptimalMoves { get; set; }
 
         public void InitializeTables()
         {
+            Tables = new List<Table>();
             Table initTable = new Table();
             CalculateTables(0, initTable);
         }
@@ -42,18 +44,25 @@ namespace TicTacToe
             }
         }
 
-        public void InitializeOptimalMoves()
-        { 
-            
+        public bool InitializeOptimalMoves()
+        {
+            OptimalMoves = new Dictionary<Table, Table>();
+            return IsOptimalMove(new Table());
         }
 
         private bool FindIAOptimalMove(Table table)
         {
+            if (table.GameFinished())
+            {
+                return !table.IsWinner(TableState.Cross);
+            }
+
             foreach (var move in table.PossibleMoves(TableState.Zero))
             {
                 if (IsOptimalMove(move))
-                { 
-                    
+                {
+                    OptimalMoves[table] = move;
+                    return true;
                 }
             }
             return false;
@@ -61,9 +70,17 @@ namespace TicTacToe
 
         private bool IsOptimalMove(Table table)
         {
+            if (table.GameFinished())
+            {
+                return !table.IsWinner(TableState.Cross);
+            }
+
             foreach (var move in table.PossibleMoves(TableState.Cross))
-            { 
-            
+            {
+                if (!FindIAOptimalMove(move))
+                {
+                    return false;
+                }
             }
             return true;
         }
@@ -94,6 +111,11 @@ namespace TicTacToe
             States[pos] = state;
         }
 
+        public TableState GetSquare(int row, int column)
+        {
+            return States[(row * 3) + column];
+        }
+
         public List<Table> PossibleMoves(TableState state)
         {
             List<Table> possibleMoves = new List<Table>();
@@ -105,6 +127,46 @@ namespace TicTacToe
                     States[i] = TableState.Neutral;
                 }
             return possibleMoves;
+        }
+
+        public bool GameFinished()
+        {
+            if (IsWinner(TableState.Cross) || IsWinner(TableState.Zero) 
+                || !FindState(TableState.Neutral))
+                return true;
+            return false;
+        }
+
+        public bool IsWinner(TableState state)
+        {
+            for (int i = 0; i < 3; ++i)
+            {
+                if ((GetSquare(i, 0) == state && GetSquare(i, 1) == state && GetSquare(i, 2) == state) ||
+                    (GetSquare(0, i) == state && GetSquare(1, i) == state && GetSquare(2, i) == state))
+                    return true;
+            }
+
+            return (GetSquare(1, 1) == state &&
+                ((GetSquare(0, 0) == state && GetSquare(2, 2) == state) ||
+                (GetSquare(2, 0) == state && GetSquare(0, 2) == state)));
+        }
+
+        public bool FindState(TableState state)
+        {
+            for (int i = 0; i < CantSquares; ++i)
+                if (States[i] == state)
+                    return true;
+            return false;
+        }
+
+        public TableSquare Difference(Table table)
+        {
+            for (int i = 0; i < 3; ++i)
+                for (int j = 0; j < 3; ++j)
+                    if (States[(i * 3) + j] != table.States[(i * 3) + j])
+                        return new TableSquare(i, j);
+
+            return new TableSquare(0, 0);
         }
 
         public override bool Equals(object obj)

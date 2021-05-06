@@ -36,12 +36,15 @@ namespace TicTacToe
             // 
             // table
             // 
+            this.table.AccessibleName = "Table";
             this.table.Location = new System.Drawing.Point(12, 12);
             this.table.Name = "table";
             this.table.Size = new System.Drawing.Size(309, 204);
             this.table.TabIndex = 0;
             this.table.TabStop = false;
             this.table.Click += new System.EventHandler(this.pictureBox1_Click);
+            this.table.Paint += new System.Windows.Forms.PaintEventHandler(this.table_Paint);
+            this.table.MouseClick += new System.Windows.Forms.MouseEventHandler(this.table_MouseClick);
             // 
             // MainForm
             // 
